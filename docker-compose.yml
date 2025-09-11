@@ -1,0 +1,20 @@
+services:
+  service:
+    image: node:22
+    volumes:
+      - service-node-modules:/work/node_modules
+      - ./public:/work/public:ro
+      - ./src:/work/src:ro
+      - ./index.html:/work/index.html:ro
+      - ./package.json:/work/package.json:ro
+      - ./tsconfig.app.json:/work/tsconfig.app.json:ro
+      - ./tsconfig.json:/work/tsconfig.json:ro
+      - ./tsconfig.node.json:/work/tsconfig.node.json:ro
+      - ./vite.config.ts.docker:/work/vite.config.ts:ro
+    working_dir: /work
+    ports:
+      - "5173:5173"
+    command: bash -c "npm i && npm run dev"
+
+volumes:
+  service-node-modules:
