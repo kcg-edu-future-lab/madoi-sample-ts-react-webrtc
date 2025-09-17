@@ -1,15 +1,11 @@
 import { EnterRoomAllowed, Madoi, PeerEntered, PeerLeaved, ShareClass, UserMessageArrived, type EnterRoomAllowedDetail, type PeerEnteredDetail, type PeerLeavedDetail, type UserMessageDetail } from "madoi-client";
 import { CauseStateChange } from "madoi-client-react";
 import { Peer, type WebRtcSignal } from "./Peer";
-import { TypedCustomEventTarget, type TypedCustomEventListenerOrObject } from "tcet";
-
-export type NewPeerArrivedListenerOrObject = TypedCustomEventListenerOrObject<Room, Peer>;
 
 @ShareClass({className: "Room"})
-export class Room extends TypedCustomEventTarget<Room, {
-  newPeer: Peer;
-}>{
+export class Room{
   private _peers: Peer[] = [];
+  private stream?: MediaStream;
 
   get peers(){
     return this._peers;
@@ -21,6 +17,7 @@ export class Room extends TypedCustomEventTarget<Room, {
    * @param stream 
    */
   addStream(stream: MediaStream){
+    this.stream = stream;
     this._peers.forEach(p=>p.addStream(stream));
   }
 
@@ -29,6 +26,7 @@ export class Room extends TypedCustomEventTarget<Room, {
    * 他の参加者への送信は停止される。
    */
   clearStream(){
+    this.stream = undefined;
     this._peers.forEach(p=>p.clearStream())
   }
 
@@ -49,7 +47,7 @@ export class Room extends TypedCustomEventTarget<Room, {
   }
 
   /**
-   * ルーム参加後に、新たに参加者が来た際に呼び出されるメソッド。
+   * 新たに参加者が来た際に呼び出されるメソッド。
    */
   @PeerEntered()
   protected onPeerEntered({peer}: PeerEnteredDetail, madoi: Madoi){
@@ -59,6 +57,9 @@ export class Room extends TypedCustomEventTarget<Room, {
     this._peers.push(p);
   }
 
+  /**
+   * 他の参加者が離脱した際に呼び出されるメソッド。
+   */
   @PeerLeaved()
   protected onPeerLeaved({peerId}: PeerLeavedDetail){
     console.log("[Room.onPeerLeaved]", peerId);
@@ -89,8 +90,8 @@ export class Room extends TypedCustomEventTarget<Room, {
       console.log("[Room.onSendSignalNeeded] send signal", content?.type);
       madoi.unicast("webRtcSignal", content, peerId);
     });
-    // Peerが作成されたことを通知。
-    this.dispatchCustomEvent("newPeer", ret);
+    // streamがあれば追加する。
+    if(this.stream) ret.addStream(this.stream);
     return ret;
   }
 

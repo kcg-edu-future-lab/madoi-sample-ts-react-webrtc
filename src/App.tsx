@@ -1,22 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import './App.css'
 import { Madoi } from 'madoi-client';
-import { RemoteVideo } from './RemoteVideo';
 import { useSharedModel } from 'madoi-client-react';
-import { Room, type NewPeerArrivedListenerOrObject } from './Room';
+import { RemoteVideo } from './RemoteVideo';
+import { Room } from './Room';
 
 interface Props{
   madoi: Madoi;
 }
 export default function App({madoi}: Props) {
+  // マイク・カメラのストリームはReactの状態として管理。
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  // madoi-react準拠のRoomクラスの利用を宣言。Roomの@PeerEnteredなどのメソッドが
+  // 呼ばれると、Reactのレンダリングも行われる。
   const room = useSharedModel(madoi, ()=>new Room());
 	const localVideoRef = useRef<HTMLVideoElement>(null!);
-
-  // 新しい参加者に対する処理。mediaStreamがあれば追加する。
-  const onNewPeer: NewPeerArrivedListenerOrObject = ({detail: peer}) =>{
-    if(mediaStream !== null) peer.addStream(mediaStream);
-  }
 
   // start/stopボタンのクリックイベントのリスナ。
   const onStartMediaStreamClick = async ()=>{
@@ -35,13 +33,6 @@ export default function App({madoi}: Props) {
       setMediaStream(null);
     }
   };
-
-  useEffect(()=>{
-    room.addEventListener("newPeer", onNewPeer);
-    return ()=>{
-      room.removeEventListener("newPeer", onNewPeer);
-    };
-  });
 
   return <>
     <div style={{border: "solid 1px", padding: "2px"}}>
