@@ -33,8 +33,6 @@ export class Room{
   /**
    * ルームに参加した際に呼び出されるメソッド。
    * 既存参加者とのWebRTC接続を開始する。
-   * @param param0 
-   * @param madoi 
    */
   @EnterRoomAllowed()
   protected onEnterRoomAllowed({otherPeers}: EnterRoomAllowedDetail, madoi: Madoi){
