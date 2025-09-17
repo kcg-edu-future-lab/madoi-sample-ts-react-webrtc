@@ -9,10 +9,10 @@ export type NewPeerArrivedListenerOrObject = TypedCustomEventListenerOrObject<Ro
 export class Room extends TypedCustomEventTarget<Room, {
   newPeer: Peer;
 }>{
-  private rtcPeers: Peer[] = [];
+  private _peers: Peer[] = [];
 
   get peers(){
-    return this.rtcPeers;
+    return this._peers;
   }
 
   /**
@@ -21,7 +21,7 @@ export class Room extends TypedCustomEventTarget<Room, {
    * @param stream 
    */
   addStream(stream: MediaStream){
-    this.peers.forEach(p=>p.addStream(stream));
+    this._peers.forEach(p=>p.addStream(stream));
   }
 
   /**
@@ -29,7 +29,7 @@ export class Room extends TypedCustomEventTarget<Room, {
    * 他の参加者への送信は停止される。
    */
   clearStream(){
-    this.peers.forEach(p=>p.clearStream())
+    this._peers.forEach(p=>p.clearStream())
   }
 
   /**
@@ -42,42 +42,39 @@ export class Room extends TypedCustomEventTarget<Room, {
   protected onEnterRoomAllowed({otherPeers}: EnterRoomAllowedDetail, madoi: Madoi){
     console.log("[Room.onEnterRoomAllowed]", otherPeers);
     otherPeers.forEach(p=>{
-      const rtcPeer = this.newPeer(p.id, true, madoi);
-      rtcPeer.startOffer();
-      this.rtcPeers.push(rtcPeer);
+      const peer = this.newPeer(p.id, true, madoi);
+      peer.startOffer();
+      this._peers.push(peer);
     });
   }
 
   /**
    * ルーム参加後に、新たに参加者が来た際に呼び出されるメソッド。
-   * 
-   * @param param0 
-   * @param madoi 
    */
   @PeerEntered()
   protected onPeerEntered({peer}: PeerEnteredDetail, madoi: Madoi){
     console.log("[Room.onPeerEntered]", peer.id);
-    // 新しい参加者が来れば、RtcPeerオブジェクトを作成してrtcPeers配列に追加しておく。
-    const rtcPeer = this.newPeer(peer.id, false, madoi);
-    this.rtcPeers.push(rtcPeer);
+    // 新しい参加者が来れば、peerオブジェクトを作成して_peers配列に追加しておく。
+    const p = this.newPeer(peer.id, false, madoi);
+    this._peers.push(p);
   }
 
   @PeerLeaved()
   protected onPeerLeaved({peerId}: PeerLeavedDetail){
     console.log("[Room.onPeerLeaved]", peerId);
-    //  参加者が退室すれば、rtcPeers配列から削除しておく。
-    this.rtcPeers = this.rtcPeers.filter(p=>p.id!==peerId);
+    //  参加者が退室すれば、_peers配列から削除しておく。
+    this._peers = this._peers.filter(p=>p.id!==peerId);
   }
 
   /**
-   * シグナルが届けば、対応するRtcPeerに渡す。
-   * @param param0 
+   * シグナルを受け取るメソッド。
    */
   @UserMessageArrived({type: "webRtcSignal"})
   @CauseStateChange(false)
   protected async onWebRtcSignalReceived(
       {sender, content}: UserMessageDetail<WebRtcSignal>){
     console.log("[Room.onWebRtcSignalReceived]", sender, content?.type);
+    // 送信元に対応するPeerに渡す。
     this.getPeer(sender!).receiveSignal(content);
   }
 
@@ -87,11 +84,12 @@ export class Room extends TypedCustomEventTarget<Room, {
   private newPeer(peerId: string, polite: boolean, madoi: Madoi){
     console.log("[Room.newPeer]", peerId);
     const ret = new Peer(peerId, polite);
-    // RtcPeerからシグナル送信が要求されれば、Madoiで送る。
+    // Peerからシグナル送信が要求されれば、Madoiで送る。
     ret.addEventListener("sendSignalNeeded", ({detail: {peerId, content}})=>{
       console.log("[Room.onSendSignalNeeded] send signal", content?.type);
       madoi.unicast("webRtcSignal", content, peerId);
     });
+    // Peerが作成されたことを通知。
     this.dispatchCustomEvent("newPeer", ret);
     return ret;
   }
@@ -100,7 +98,7 @@ export class Room extends TypedCustomEventTarget<Room, {
    * ピアの配列から指定のピアを探すメソッド
    */
   private getPeer(peerId: string){
-    const ret = this.rtcPeers.find(p=>p.id===peerId);
+    const ret = this._peers.find(p=>p.id===peerId);
     if(!ret) throw new Error(`peer not found. ${peerId}`);
     return ret;
   }
