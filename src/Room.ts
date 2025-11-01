@@ -1,8 +1,8 @@
-import { EnterRoomAllowed, Madoi, PeerEntered, PeerLeaved, ShareClass, UserMessageArrived, type EnterRoomAllowedDetail, type PeerEnteredDetail, type PeerLeavedDetail, type UserMessageDetail } from "madoi-client";
-import { CauseStateChange } from "madoi-client-react";
+import { ClassName, EnterRoomAllowed, Madoi, PeerEntered, PeerLeaved, UserMessageArrived, type EnterRoomAllowedDetail, type PeerEnteredDetail, type PeerLeavedDetail, type UserMessageDetail } from "madoi-client";
+import { SuppressRender } from "madoi-client-react";
 import { Peer, type WebRtcSignal } from "./Peer";
 
-@ShareClass({className: "Room"})
+@ClassName("Room")
 export class Room{
   private _peers: Peer[] = [];
   private stream?: MediaStream;
@@ -68,8 +68,8 @@ export class Room{
   /**
    * シグナルを受け取るメソッド。
    */
-  @UserMessageArrived({type: "webRtcSignal"})
-  @CauseStateChange(false)
+  @UserMessageArrived("webRtcSignal")
+  @SuppressRender()
   protected async onWebRtcSignalReceived(
       {sender, content}: UserMessageDetail<WebRtcSignal>){
     console.log("[Room.onWebRtcSignalReceived]", sender, content?.type);

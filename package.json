@@ -10,8 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "madoi-client": "^0.2.8",
-    "madoi-client-react": "^0.1.6",
+    "and": "^0.0.3",
+    "madoi-client": "^0.3.0",
+    "madoi-client-react": "^0.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tcet": "^1.0.3",
