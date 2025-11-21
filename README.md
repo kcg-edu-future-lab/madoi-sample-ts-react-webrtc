@@ -108,6 +108,6 @@ Webサーバに配備する場合は、madoi-volatileserverもサーバに配備
     * 自身のMediaStream(カメラ/マイク)。playボタン(buttonタグ)に反映。
 * madoi-react
   * ReactでMadoiを使ったコードを簡潔にするため、[madoi-react](https://www.npmjs.com/package/madoi-client-react)を利用しています。
-  * Madoiが発生させるイベント(ルーム管理やメッセージ受信関連)を受け取るメソッドにデコレータを指定し、useSharedModelフック経由でクラスを使用すると、イベントが発生した際にメソッドが呼ばれ、その後Reactの再レンダリングが行われます。再レンダリングは、@CauseStateUpdateデコレータで無効にできます。[Room](https://github.com/kcg-edu-future-lab/madoi-sample-ts-react-webrtc/blob/main/src/Room.ts)クラスでこれらの仕組みが使われています。
+  * Madoiが発生させるイベント(ルーム管理やメッセージ受信関連)を受け取るメソッドにデコレータを指定し、useSharedModelフック経由でクラスを使用すると、イベントが発生した際にメソッドが呼ばれ、その後Reactの再レンダリングが行われます。再レンダリングは、@SuppressRenderデコレータで無効にできます。[Room](https://github.com/kcg-edu-future-lab/madoi-sample-ts-react-webrtc/blob/main/src/Room.ts)クラスでこれらの仕組みが使われています。
   * 上記[Presence](https://github.com/kcg-edu-future-lab/presence)の[VideoMeetingOwnModel](https://github.com/kcg-edu-future-lab/presence/blob/main/src/components/videomeeting/model/VideoMeetingOwnModel.ts)でも同様の仕組みを利用しています。
   
